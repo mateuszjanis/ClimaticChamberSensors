@@ -1,19 +1,28 @@
 #include <Arduino.h>
-#define LED 2
+#include "DHT.h"
+
+#define DHT_TYPE DHT22
+#define DHT_PIN 4
+
+DHT dht(DHT_PIN, DHT_TYPE);
 
 void setup() {
   Serial.begin(115200);
-  pinMode(LED,OUTPUT);
   Serial.println("\nESP START");
   delay(500);
+  dht.begin();
 }
 
 void loop() {
-  delay(500);
-  digitalWrite(LED,HIGH);
-  Serial.println("On");
 
-  delay(500);
-  digitalWrite(LED,LOW);
-  Serial.println("Off");
+  float hum = dht.readHumidity();
+  float temp = dht.readTemperature();
+
+  if (isnan(hum) || isnan(temp)) {
+    Serial.println(F("Failed to read from DHT sensor!"));
+    return;
+  }
+
+  Serial.printf("Humidity: %f;  Temperature: %f\n", hum, temp);
+  delay(2000);
 }
