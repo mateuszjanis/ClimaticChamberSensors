@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "RTClib.h"
 
 RTC_DS3231 rtc;
@@ -11,6 +13,29 @@ const int HEAT_PIN_1 = 25;
 const int HEAT_PIN_2 = 26;
 const int COOL_PIN_1 = 19;
 const int COOL_PIN_2 = 18; 
+
+const int oneWireBus = 17;     
+
+// Setup a oneWire instance to communicate with any OneWire devices
+OneWire oneWire(oneWireBus);
+
+// Pass our oneWire reference to Dallas Temperature sensor 
+DallasTemperature sensors(&oneWire);
+
+float peltierTemp_1;
+float peltierTemp_2;
+
+void handlePeltierTemp(){
+
+  sensors.requestTemperatures(); 
+  peltierTemp_1 = sensors.getTempCByIndex(0);
+  peltierTemp_2 = sensors.getTempCByIndex(1);
+ 
+}
+
+void printPeltierTemp(){
+
+  Serial.printf("Sens1: %f ºC, Sens2: %f\n", peltierTemp_1, peltierTemp_2);
 
 void setPeltierPins(){
   pinMode(HEAT_PIN_1,OUTPUT);
@@ -128,15 +153,23 @@ void printRTCinfo(){
 
 void setup() {
   Serial.begin(115200);
+
+  sensors.begin();
   setPeltierPins();
   setRTC();
   Serial.println("\nESP START");
   delay(500);
   Serial.println("Gotowe. Wpisz 0, 1 lub 2:");
+  
 }
 
 void loop() {
+
+  handlePeltierTemp();
+  printPeltierTemp();
   handleInput();
   printRTCinfo();
+  
   delay(3000);
+
 }
