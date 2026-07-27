@@ -5,9 +5,9 @@ RTC_DS3231 rtc;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
-void setup() {
-  Serial.begin(115200);
+DateTime now;
 
+void setRTC(){
   if (! rtc.begin()) {
   
     Serial.println("Couldn't find RTC");
@@ -22,14 +22,11 @@ void setup() {
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
   }
-
-  Serial.println("\nESP START");
-  delay(500);
 }
 
-void loop() {
+void printRTCinfo(){
   // Get the current time from the RTC
-  DateTime now = rtc.now();
+  now = rtc.now();
   
   // Getting each time field in individual variables
   // And adding a leading zero when needed;
@@ -52,5 +49,16 @@ void loop() {
   Serial.println("ºC");
 
   Serial.println();
+}
+
+void setup() {
+  Serial.begin(115200);
+  setRTC();
+  Serial.println("\nESP START");
+  delay(500);
+}
+
+void loop() {
+  printRTCinfo();
   delay(3000);
 }
