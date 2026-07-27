@@ -1,134 +1,14 @@
-#include <Arduino.h>
-#include "DHT.h"
-#include <OneWire.h>
-#include <DallasTemperature.h>
+#include "Peltier.h"
+#include "Sensors.h"
 #include "RTClib.h"
 
 ////////////////////////////////////////////////////
-//--------------------- PINS -----------------------
+//------------------- OBJECTS --------------------//
 ////////////////////////////////////////////////////
-
-const int HEAT_PIN_1 = 25;
-const int HEAT_PIN_2 = 26;
-const int COOL_PIN_1 = 19;
-const int COOL_PIN_2 = 18; 
-
-const int oneWireBus = 17; //DS18B20
-
-const int DHT_PIN_1 = 4;
-const int DHT_PIN_2 = 16;
-
-#define DHT_TYPE DHT22
-
-////////////////////////////////////////////////////
-//------------------- OBJECTS ----------------------
-////////////////////////////////////////////////////
-
-OneWire oneWire(oneWireBus);
-DallasTemperature sensors(&oneWire);
 
 DateTime now;
 
 RTC_DS3231 rtc;
-
-DHT dht1(DHT_PIN_1, DHT_TYPE);
-DHT dht2(DHT_PIN_2, DHT_TYPE);
-
-////////////////////////////////////////////////////
-//----------------- GLOBAL VARIABLES ---------------
-////////////////////////////////////////////////////
-
-float peltierTemp_1;
-float peltierTemp_2;
-float hum_1, DHT_temp_1, hum_2, DHT_temp_2, hum_mean, DHT_temp_mean;
-
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-
-void handleDHT(){
-  hum_1 = dht1.readHumidity();
-  DHT_temp_1 = dht1.readTemperature();
-
-  hum_1 = dht2.readHumidity();
-  DHT_temp_2 = dht2.readTemperature();
-
-  if (isnan(hum_1) || isnan(DHT_temp_1)) {
-
-    Serial.println(F("Failed to read from DHT 1 sensor!"));
-    return;
-
-  } else if (isnan(hum_2) || isnan(DHT_temp_1)) {
-
-    Serial.println(F("Failed to read from DHT 2 sensor!"));
-    return;
-
-  }
-
-  hum_mean = (hum_1 + hum_2) / 2;
-  DHT_temp_mean = (DHT_temp_1 + DHT_temp_2) / 2;
-}
-
-void printDHT(){
-
-  Serial.printf("DHT1: Humidity: %f;  Temperature: %f\n", hum_1, DHT_temp_1);
-  Serial.printf("DHT2: Humidity: %f;  Temperature: %f\n", hum_2, DHT_temp_2);
-  Serial.printf("DHT mean: Humidity: %f;  Temperature: %f\n\n", hum_mean, DHT_temp_mean);
-}
-
-void handlePeltierTemp(){
-
-  sensors.requestTemperatures(); 
-  peltierTemp_1 = sensors.getTempCByIndex(0);
-  peltierTemp_2 = sensors.getTempCByIndex(1);
- 
-}
-
-void printPeltierTemp(){
-
-  Serial.printf("Sens1: %f ºC, Sens2: %f\n", peltierTemp_1, peltierTemp_2);
-
-}
-
-void setPeltierPins(){
-  pinMode(HEAT_PIN_1,OUTPUT);
-  pinMode(HEAT_PIN_2,OUTPUT);
-  pinMode(COOL_PIN_1,OUTPUT);
-  pinMode(COOL_PIN_2,OUTPUT);
-
-  digitalWrite(HEAT_PIN_1,HIGH);
-  digitalWrite(HEAT_PIN_2,HIGH);
-  digitalWrite(COOL_PIN_1,HIGH);
-  digitalWrite(COOL_PIN_2,HIGH);
-}
-
-void setCOOLING(){
-
-  digitalWrite(HEAT_PIN_1,HIGH); Serial.printf("%d HIGH, ",HEAT_PIN_1);
-  digitalWrite(HEAT_PIN_2,HIGH); Serial.printf("%d HIGH, ",HEAT_PIN_2);
-  digitalWrite(COOL_PIN_1,LOW); Serial.printf("%d LOW, ",COOL_PIN_1);
-  digitalWrite(COOL_PIN_2,LOW); Serial.printf("%d LOW ",COOL_PIN_2);
-  Serial.println("COOLING...");
-
-}
-
-void setHEATING(){
-
-  digitalWrite(HEAT_PIN_1,LOW); Serial.printf("%d LOW, ",COOL_PIN_1);
-  digitalWrite(HEAT_PIN_2,LOW); Serial.printf("%d LOW, ",COOL_PIN_2);
-  digitalWrite(COOL_PIN_1,HIGH); Serial.printf("%d HIGH, ",COOL_PIN_1);
-  digitalWrite(COOL_PIN_2,HIGH); Serial.printf("%d HIGH ",COOL_PIN_2);
-  Serial.println("HEATING...");
-
-}
-
-void setIDLE(){
-
-  digitalWrite(HEAT_PIN_1,HIGH);
-  digitalWrite(HEAT_PIN_2,HIGH);
-  digitalWrite(COOL_PIN_1,HIGH);
-  digitalWrite(COOL_PIN_2,HIGH);
-  Serial.println("IDLE...");
-
-}
 
 void handleInput(){
   
