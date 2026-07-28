@@ -1,3 +1,4 @@
+#pragma once
 #include "DHT.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -6,9 +7,9 @@
 //--------------------- PINS ---------------------//
 ////////////////////////////////////////////////////
 
-const int oneWireBus = 17; //DS18B20
-const int DHT_PIN_1 = 4;
-const int DHT_PIN_2 = 16;
+extern const int oneWireBus;
+extern const int DHT_PIN_1;
+extern const int DHT_PIN_2;
 
 #define DHT_TYPE DHT22
 
@@ -16,21 +17,19 @@ const int DHT_PIN_2 = 16;
 //------------------- OBJECTS --------------------//
 ////////////////////////////////////////////////////
 
-DHT dht1(DHT_PIN_1, DHT_TYPE);
-DHT dht2(DHT_PIN_2, DHT_TYPE);
+extern DHT dht1;
+extern DHT dht2;
 
-OneWire oneWire(oneWireBus);
-DallasTemperature sensors(&oneWire);
+extern OneWire oneWire;
+extern DallasTemperature sensors;
 
 ////////////////////////////////////////////////////
 //----------------- GLOBAL VARIABLES -------------//
 ////////////////////////////////////////////////////
 
-float peltierTemp_1;
-float peltierTemp_2;
-float hum_1, DHT_temp_1, hum_2, DHT_temp_2, hum_mean, DHT_temp_mean;
-
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+extern float peltierTemp_1;
+extern float peltierTemp_2;
+extern float hum_1, DHT_temp_1, hum_2, DHT_temp_2, hum_mean, DHT_temp_mean;
 
 ////////////////////////////////////////////////////
 //------------------ FUNCTIONS -------------------//

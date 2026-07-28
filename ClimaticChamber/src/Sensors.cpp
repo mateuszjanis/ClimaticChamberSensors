@@ -1,10 +1,44 @@
 #include "Sensors.h"
 
+////////////////////////////////////////////////////
+//--------------------- PINS ---------------------//
+////////////////////////////////////////////////////
+
+const int oneWireBus = 17; //DS18B20
+const int DHT_PIN_1 = 4;
+const int DHT_PIN_2 = 16;
+
+#ifndef DHT_TYPE
+  #define DHT_TYPE DHT22
+#endif
+
+////////////////////////////////////////////////////
+//------------------- OBJECTS --------------------//
+////////////////////////////////////////////////////
+
+DHT dht1(DHT_PIN_1, DHT_TYPE);
+DHT dht2(DHT_PIN_2, DHT_TYPE);
+
+OneWire oneWire(oneWireBus);
+DallasTemperature sensors(&oneWire);
+
+////////////////////////////////////////////////////
+//----------------- GLOBAL VARIABLES -------------//
+////////////////////////////////////////////////////
+
+float peltierTemp_1;
+float peltierTemp_2;
+float hum_1, DHT_temp_1, hum_2, DHT_temp_2, hum_mean, DHT_temp_mean;
+
+////////////////////////////////////////////////////
+//------------------ FUNCTIONS -------------------//
+////////////////////////////////////////////////////
+
 void handleDHT(){
   hum_1 = dht1.readHumidity();
   DHT_temp_1 = dht1.readTemperature();
 
-  hum_1 = dht2.readHumidity();
+  hum_2 = dht2.readHumidity();
   DHT_temp_2 = dht2.readTemperature();
 
   if (isnan(hum_1) || isnan(DHT_temp_1)) {

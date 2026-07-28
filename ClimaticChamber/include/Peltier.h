@@ -1,13 +1,14 @@
+#pragma once
 #include <Arduino.h>
 
 ////////////////////////////////////////////////////
 //--------------------- PINS ---------------------//
 ////////////////////////////////////////////////////
 
-const int HEAT_PIN_1 = 25;
-const int HEAT_PIN_2 = 26;
-const int COOL_PIN_1 = 19;
-const int COOL_PIN_2 = 18;
+extern const int HEAT_PIN_1;
+extern const int HEAT_PIN_2;
+extern const int COOL_PIN_1;
+extern const int COOL_PIN_2;
 
 ////////////////////////////////////////////////////
 //------------------ FUNCTIONS -------------------//
