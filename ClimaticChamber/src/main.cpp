@@ -48,7 +48,7 @@ void handleDHT(){
   hum_1 = dht1.readHumidity();
   DHT_temp_1 = dht1.readTemperature();
 
-  hum_1 = dht2.readHumidity();
+  hum_2 = dht2.readHumidity();
   DHT_temp_2 = dht2.readTemperature();
 
   if (isnan(hum_1) || isnan(DHT_temp_1)) {
@@ -222,6 +222,6 @@ void loop() {
   printPeltierTemp();
   handleInput();
   printRTCinfo();
-  
+  Serial.println("----------------------------------\n");
   delay(3000);
 }
