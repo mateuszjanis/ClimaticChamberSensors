@@ -59,21 +59,29 @@ void handleDHT(){
 
 void printDHT(){
 
-  Serial.printf("DHT1: Humidity: %f;  Temperature: %f\n", hum_1, DHT_temp_1);
-  Serial.printf("DHT2: Humidity: %f;  Temperature: %f\n", hum_2, DHT_temp_2);
-  Serial.printf("DHT mean: Humidity: %f;  Temperature: %f\n\n", hum_mean, DHT_temp_mean);
+  // Serial.printf("DHT1: Humidity: %f;  Temperature: %f\n", hum_1, DHT_temp_1);
+  // Serial.printf("DHT2: Humidity: %f;  Temperature: %f\n", hum_2, DHT_temp_2);
+  // Serial.printf("DHT mean: Humidity: %f;  Temperature: %f\n\n", hum_mean, DHT_temp_mean);
+
+  Serial.printf("TempUp: %f, ",DHT_temp_1);
+  Serial.printf("TempDown: %f, ",DHT_temp_2);
+  Serial.printf("HumUp: %f, ",hum_1);
+  Serial.printf("HumDown: %f, ",hum_2);
+
 }
 
 void handlePeltierTemp(){
 
   sensors.requestTemperatures(); 
-  peltierTemp_1 = sensors.getTempCByIndex(0);
-  peltierTemp_2 = sensors.getTempCByIndex(1);
+  peltierTemp_1 = sensors.getTempCByIndex(1);
+  peltierTemp_2 = sensors.getTempCByIndex(0);
  
 }
 
 void printPeltierTemp(){
 
-  Serial.printf("Sens1: %f ºC, Sens2: %f\n", peltierTemp_1, peltierTemp_2);
-
+  // Serial.printf("Sens1: %f ºC, Sens2: %f\n", peltierTemp_1, peltierTemp_2);
+  
+  Serial.printf("PeltUp: %f, ",peltierTemp_1);
+  Serial.printf("PeltDown: %f, ",peltierTemp_2);
 }

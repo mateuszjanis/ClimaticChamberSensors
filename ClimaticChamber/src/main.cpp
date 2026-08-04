@@ -2,6 +2,7 @@
 #include "Sensors.h"
 #include "TimeManager.h"
 
+/* Input handling
 void handleInput(){
   
   if (Serial.available() > 0) {
@@ -29,27 +30,30 @@ void handleInput(){
       Serial.println("Gotowe. Wpisz 0, 1 lub 2:");
     }
 }
+*/
 
 void setup() {
   Serial.begin(115200);
   dht1.begin();
   dht2.begin();
   sensors.begin();
-  setPeltierPins();
+  // setPeltierPins();
   setRTC();
 
   Serial.println("\nESP START");
   delay(500);
-  Serial.println("Gotowe. Wpisz 0, 1 lub 2:");
+  // Serial.println("Gotowe. Wpisz 0, 1 lub 2:");
 }
 
 void loop() {
   handleDHT();
-  printDHT();
   handlePeltierTemp();
+  // handleInput();
+
+  printDHT();  
   printPeltierTemp();
-  handleInput();
-  printRTCinfo();
-  Serial.println("----------------------------------\n");
-  delay(3000);
+  // printRTCinfo();
+
+  Serial.println("");
+  delay(30000);
 }
