@@ -50,6 +50,6 @@ void loop() {
   printPeltierTemp();
   handleInput();
   printRTCinfo();
-  
+  Serial.println("----------------------------------\n");
   delay(3000);
 }
