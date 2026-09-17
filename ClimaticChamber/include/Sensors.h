@@ -19,8 +19,8 @@ extern DallasTemperature sensors;
 //----------------- GLOBAL VARIABLES -------------//
 ////////////////////////////////////////////////////
 
+extern float peltierTemp_0;
 extern float peltierTemp_1;
-extern float peltierTemp_2;
 
 ////////////////////////////////////////////////////
 //------------------ FUNCTIONS -------------------//

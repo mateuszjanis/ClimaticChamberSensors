@@ -17,8 +17,8 @@ DallasTemperature sensors(&oneWire);
 //----------------- GLOBAL VARIABLES -------------//
 ////////////////////////////////////////////////////
 
+float peltierTemp_0;
 float peltierTemp_1;
-float peltierTemp_2;
 
 ////////////////////////////////////////////////////
 //------------------ FUNCTIONS -------------------//
@@ -27,15 +27,14 @@ float peltierTemp_2;
 void handlePeltierTemp(){
 
   sensors.requestTemperatures(); 
+  peltierTemp_0 = sensors.getTempCByIndex(0);
   peltierTemp_1 = sensors.getTempCByIndex(1);
-  peltierTemp_2 = sensors.getTempCByIndex(0);
  
 }
 
 void printPeltierTemp(){
-
-  // Serial.printf("Sens1: %f ºC, Sens2: %f\n", peltierTemp_1, peltierTemp_2);
   
-  Serial.printf("PeltUp: %f, ",peltierTemp_1);
-  Serial.printf("PeltDown: %f, ",peltierTemp_2);
+  Serial.printf("PeltIn: %f, ",peltierTemp_0);
+  Serial.printf("PeltOut: %f\n",peltierTemp_1);
+
 }
