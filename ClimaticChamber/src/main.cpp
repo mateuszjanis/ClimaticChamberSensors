@@ -2,8 +2,11 @@
 #include <WiFi.h>
 #include <WiFiClient.h> 
 #include <ESP32_FTPClient.h>
+#include <esp_task_wdt.h>
 #include <string>
 #include "Sensors.h"
+
+#define WDT_TIMEOUT_SECONDS 10
 
 #define WIFI_SSID "hotspot"
 #define WIFI_PASS ""
@@ -24,16 +27,37 @@ ESP32_FTPClient ftp (ftp_server,ftp_user,ftp_pass, 5000, 2);
 
 //////////////////// FUNCTIONS /////////////////////
 
-void InitializeDataTransfer();
+void initializeDataTransfer();
 void handleFTP();
+void initializeWIFI();
 
 void setup() {
+
+  esp_task_wdt_init(WDT_TIMEOUT_SECONDS, true);
+  esp_task_wdt_add(NULL);
 
   Serial.begin(115200);
   sensors.begin();
 
+  initializeWIFI();
+  initializeDataTransfer();
+
+  Serial.println("\nESP START");
+  delay(50);
+}
+
+void loop() {
+  esp_task_wdt_reset();
+  handlePeltierTemp();
+  printPeltierTemp();
+  Serial.println("----------------------------------\n");
+  handleFTP();
+  delay(sensors_read_interval);
+}
+
+void initializeWIFI(){
   WiFi.begin( WIFI_SSID, WIFI_PASS );
-  
+
   Serial.println("Connecting Wifi...");
   while (WiFi.status() != WL_CONNECTED) {
       delay(500);
@@ -49,22 +73,9 @@ void setup() {
   Serial.println("");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-
-  InitializeDataTransfer();
-
-  Serial.println("\nESP START");
-  delay(50);
 }
 
-void loop() {
-  handlePeltierTemp();
-  printPeltierTemp();
-  Serial.println("//////////////////////////////////\n");
-  handleFTP();
-  delay(sensors_read_interval);
-}
-
-void InitializeDataTransfer(){
+void initializeDataTransfer(){
 
   ftp.OpenConnection();
   ftp.ChangeWorkDir("Data");
@@ -106,7 +117,7 @@ void handleFTP(){
       ftp.CloseFile();
     }
     else {
-        InitializeDataTransfer();
+        initializeDataTransfer();
         connection_try_counter++;
     }
 
