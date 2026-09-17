@@ -100,7 +100,7 @@ void initializeDataTransfer(){
   if(!fileExists){
     ftp.InitFile("Type A");
     ftp.NewFile(data_file_name);
-    ftp.Write("SensIn, SensOut\n");
+    ftp.Write("SensIn; SensOut\n");
     ftp.CloseFile();
     Serial.printf("File %s created. Writing header.\n", data_file_name);
   }
@@ -112,7 +112,7 @@ void handleFTP(){
       ftp.InitFile("Type A");
       ftp.AppendFile(data_file_name);
       char temp_s[100];
-      snprintf(temp_s, sizeof(temp_s), "%.2f, %.2f\n", peltierTemp_0, peltierTemp_1);
+      snprintf(temp_s, sizeof(temp_s), "%.2f; %.2f\n", peltierTemp_0, peltierTemp_1);
       ftp.Write(temp_s);
       ftp.CloseFile();
     }
