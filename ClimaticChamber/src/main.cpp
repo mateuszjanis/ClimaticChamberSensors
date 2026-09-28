@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h> 
 #include <ESP32_FTPClient.h>
-#include <esp_task_wdt.h>
+// #include <esp_task_wdt.h>
 #include <string>
 #include "Sensors.h"
 
@@ -33,8 +33,8 @@ void initializeWIFI();
 
 void setup() {
 
-  esp_task_wdt_init(WDT_TIMEOUT_SECONDS, true);
-  esp_task_wdt_add(NULL);
+  // esp_task_wdt_init(WDT_TIMEOUT_SECONDS, true);
+  // esp_task_wdt_add(NULL);
 
   Serial.begin(115200);
   sensors.begin();
@@ -47,7 +47,7 @@ void setup() {
 }
 
 void loop() {
-  esp_task_wdt_reset();
+  // esp_task_wdt_reset();
   handlePeltierTemp();
   printPeltierTemp();
   Serial.println("----------------------------------\n");
