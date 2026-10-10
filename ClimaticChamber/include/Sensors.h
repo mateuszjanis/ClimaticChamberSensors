@@ -22,6 +22,8 @@ extern DallasTemperature sensors;
 extern float peltierTemp_0;
 extern float peltierTemp_1;
 
+extern char peltierTempPayload[128];
+
 ////////////////////////////////////////////////////
 //------------------ FUNCTIONS -------------------//
 ////////////////////////////////////////////////////
