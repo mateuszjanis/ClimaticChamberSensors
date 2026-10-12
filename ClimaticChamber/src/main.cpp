@@ -23,7 +23,7 @@ char peltierTempPayload[128];
 char gasSensorsPayload[256];
 
 const unsigned int peltierTemp_read_interval = 10 * 1000; // 10 seconds
-const unsigned int gasSensors_read_interval = 10 * 1000; // 10 seconds
+const unsigned int gasSensors_read_interval = 10 * 60 * 1000; // 10 minutes
 
 const unsigned int connection_try_treshold = 20;
 unsigned int connection_try_counter = 0;
@@ -53,7 +53,7 @@ void setup() {
 
   // get configuration from conf file (RPI) - .txt ?????? or .json
 
-  sensors.begin();
+  peltierSensors.begin();
   std::thread gasSensorsThread(runGasSensors);
 
   Serial.println("\nESP START");

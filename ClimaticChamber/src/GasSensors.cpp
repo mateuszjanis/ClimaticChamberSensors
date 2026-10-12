@@ -7,45 +7,43 @@ bool gasSensorsReady = false;
 //SCD41_CO2_I2C
 SCD4x scd4x;
 
+//External ADC
+Adafruit_ADS1115 ads;
+
 void ADC_init() {
   analogReadResolution(12);  // 12-bit = 0–4095
 
   // Tłumienie dla czujników 0–2V
   analogSetPinAttenuation(MG811_OKY_CO2, ADC_6db); // MG811
-  analogSetPinAttenuation(SEN0565_CH4, ADC_6db); // CH4
-  analogSetPinAttenuation(SEN0568_H2S, ADC_6db); // H2S
-  analogSetPinAttenuation(SEN0569_EtOH, ADC_6db); // EtOH
-  analogSetPinAttenuation(SEN0567_NH3, ADC_6db); // NH3
+
+  // analogSetPinAttenuation(SEN0565_CH4, ADC_6db); // CH4
+  // analogSetPinAttenuation(SEN0568_H2S, ADC_6db); // H2S
+  // analogSetPinAttenuation(SEN0569_EtOH, ADC_6db); // EtOH
+  // analogSetPinAttenuation(SEN0567_NH3, ADC_6db); // NH3
   
   analogSetPinAttenuation(SEN0467_H2S, ADC_6db); // H2S
   analogSetPinAttenuation(SEN0469_NH3, ADC_6db); // NH3
-
 
   // Tłumienie dla czujników z R-div (do ~4V)
   analogSetPinAttenuation(MQ3_EtOH, ADC_6db); // MQ3
   analogSetPinAttenuation(MQ4_CH4, ADC_6db); // MQ4
 }
 
-void readSensor(uint8_t pin, bool useRdiv_old, bool useRdiv_new, float *voltage) {
+void readSensor(uint8_t pin, bool useRdiv, float *voltage) {
   int raw = analogRead(pin);
   float v = raw * ADC_SCALE;
 
-  if (useRdiv_old) {
-    v = v / R_DIV_RATIO_OLD;  // Korekta napięcia z dzielnika
+  if (useRdiv) {
+    v = v / R_DIV_RATIO;  // Korekta napięcia z dzielnika
   }
-
-  if (useRdiv_new) {
-    v = v / R_DIV_RATIO_NEW;  // Korekta napięcia z dzielnika
-  }
-
   // Serial.printf("Raw: %d, V: %.3f V\n", raw, v);
 
   *voltage += v;  // Dodaj do sumy uśredniania
 }
 
-bool SCD41_CO2_I2C_init()
+bool I2C_init()
 {
-    Wire.begin(SCD41_CO2_I2C_SDA, SCD41_CO2_I2C_SCL);
+  Wire.begin(I2C_SDA, I2C_SCL);
 
   Serial.println("🔍 Skanowanie magistrali I2C...");
   for (uint8_t addr = 1; addr < 127; addr++) {
@@ -62,18 +60,40 @@ bool SCD41_CO2_I2C_init()
     Serial.println("❌ Nie wykryto czujnika SCD41.");
     return false;
   }
-
   else
   {
   Serial.println("✅ Czujnik SCD41 wykryty.");
   scd4x.stopPeriodicMeasurement();
   delay(500);
   scd4x.startPeriodicMeasurement();
+  }
+
+  Serial.println("");
+  
+  Serial.println("📡 Inicjalizacja zewnetrznego ADC...");
+  if (!ads.begin()) {
+    Serial.println("❌ Nie wykryto zewnetrznego ADC.");
+    return false;
+  }
+  else
+  {
+    Serial.println("✅ Zewnetrzny ADC wykryty.");
+  }
+
   return true; 
+}
+
+void readSensorI2C(uint16_t channel, float *voltage){
+  float voltage_temp = ads.computeVolts(channel);
+  if (voltage_temp > 0.1 && voltage_temp > 4.9){
+    *voltage += voltage_temp;
+  }
+  else{
+    Serial.println("⚠️ Zly odczyt ADC");
   }
 }
 
-void readSensorI2C (float *CO2, float *T, float *H) {
+void readSensorSCD41_CO2 (float *CO2, float *T, float *H) {
   if (scd4x.readMeasurement()) {
     *CO2 += scd4x.getCO2();
     *T += scd4x.getTemperature();
@@ -94,7 +114,7 @@ void gasSensors_init()
     ADC_init();
     delay(5);
 
-    if(SCD41_CO2_I2C_init()==false)
+    if(I2C_init()==false)
     ERROR_SYSTEM =  ERROR_SYSTEM | 0x0040; 
     delay(5); 
 }
@@ -104,6 +124,7 @@ void runMeasurementCycle(){
   float MG811_OKY_CO2_f   = 0.0f;
   float MQ3_EtOH_f        = 0.0f;
   float MQ4_CH4_f         = 0.0f;
+
   float SEN0565_CH4_f     = 0.0f;
   float SEN0568_H2S_f     = 0.0f;
   float SEN0569_EtOH_f    = 0.0f;
@@ -131,20 +152,19 @@ void runMeasurementCycle(){
 
   for (int i = 0; i < SAMPLES; i++) {  
 
-    //                 R-div:  old    new
-    readSensor(MG811_OKY_CO2, false, false, &MG811_OKY_CO2_f);
-    readSensor(MQ3_EtOH,      true,  false, &MQ3_EtOH_f);
-    readSensor(MQ4_CH4,       true,  false, &MQ4_CH4_f);
+    //                      R-div-use
+    readSensor(MG811_OKY_CO2, false,  &MG811_OKY_CO2_f);
+    readSensor(MQ3_EtOH,      true,   &MQ3_EtOH_f);
+    readSensor(MQ4_CH4,       true,   &MQ4_CH4_f);
+    readSensor(SEN0467_H2S,   true,  &SEN0467_H2S_f);
+    readSensor(SEN0469_NH3,   true,  &SEN0469_NH3_f);
 
-    readSensor(SEN0565_CH4,   true,  false, &SEN0565_CH4_f);
-    readSensor(SEN0568_H2S,   false, true, &SEN0568_H2S_f);
-    readSensor(SEN0569_EtOH,  true,  false, &SEN0569_EtOH_f);
-    readSensor(SEN0567_NH3,   false, true, &SEN0567_NH3_f);
+    readSensorI2C(SEN0565_CH4, &SEN0565_CH4_f);
+    readSensorI2C(SEN0568_H2S, &SEN0568_H2S_f);
+    readSensorI2C(SEN0569_EtOH,&SEN0569_EtOH_f);
+    readSensorI2C(SEN0567_NH3, &SEN0567_NH3_f);
 
-    readSensor(SEN0467_H2S,   false, true, &SEN0467_H2S_f);
-    readSensor(SEN0469_NH3,   false, true, &SEN0469_NH3_f);
-
-    readSensorI2C(&SCD41_CO2_f, &SCD41_T_f, &SCD41_H_f);
+    readSensorSCD41_CO2(&SCD41_CO2_f, &SCD41_T_f, &SCD41_H_f);
 
     delay(5000); 
   }
