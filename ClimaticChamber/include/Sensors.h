@@ -13,7 +13,7 @@ extern const int oneWireBus;
 ////////////////////////////////////////////////////
 
 extern OneWire oneWire;
-extern DallasTemperature sensors;
+extern DallasTemperature peltierSensors;
 
 ////////////////////////////////////////////////////
 //----------------- GLOBAL VARIABLES -------------//

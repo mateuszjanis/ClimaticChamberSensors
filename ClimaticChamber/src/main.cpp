@@ -23,7 +23,7 @@ char peltierTempPayload[128];
 char gasSensorsPayload[256];
 
 const unsigned int peltierTemp_read_interval = 10 * 1000; // 10 seconds
-const unsigned int gasSensors_read_interval = 10 * 1000; // 10 seconds
+const unsigned int gasSensors_read_interval = 10 * 60 * 1000; // 10 minutes
 
 const unsigned int connection_try_treshold = 20;
 unsigned int connection_try_counter = 0;
@@ -53,7 +53,7 @@ void setup() {
 
   // get configuration from conf file (RPI) - .txt ?????? or .json
 
-  sensors.begin();
+  peltierSensors.begin();
   std::thread gasSensorsThread(runGasSensors);
 
   Serial.println("\nESP START");
@@ -98,6 +98,10 @@ void initializeDataTransfer(){
 
   ftp.OpenConnection();
   ftp.ChangeWorkDir("Data");
+
+  /* ---------- is appending to file needed? 
+                or creating new file is better?
+
   String fileList[128];
   ftp.InitFile("Type A");
   ftp.ContentListWithListCommand(" /Data", fileList);
@@ -142,7 +146,7 @@ void initializeDataTransfer(){
     ftp.CloseFile();
     // Serial.printf("File %s created. Writing header.\n", peltierTemp_file_name);
   }
-
+  */
 }
 
 void handleFTP(){
@@ -158,6 +162,8 @@ void handleFTP(){
         gasLock.unlock();
 
         writeToFTP(gasSensors_file_name, temp_payload);
+
+        gasSensorsReady = false;
     }
 
   }
@@ -173,7 +179,8 @@ void handleFTP(){
 
 void writeToFTP(char* fileName, const char* payload){
       ftp.InitFile("Type A");
-      ftp.AppendFile(fileName);
+      // ftp.AppendFile(fileName);
+      ftp.NewFile(fileName);
       ftp.Write(payload);
       ftp.CloseFile();
 }

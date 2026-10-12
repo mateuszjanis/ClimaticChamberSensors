@@ -11,7 +11,7 @@ const int oneWireBus = 4; //DS18B20
 ////////////////////////////////////////////////////
 
 OneWire oneWire(oneWireBus);
-DallasTemperature sensors(&oneWire);
+DallasTemperature peltierSensors(&oneWire);
 
 ////////////////////////////////////////////////////
 //----------------- GLOBAL VARIABLES -------------//
@@ -23,10 +23,10 @@ DallasTemperature sensors(&oneWire);
 
 void handlePeltierTemp(){
 
-  sensors.requestTemperatures();
+  peltierSensors.requestTemperatures();
 
-  float peltierTemp_0 = sensors.getTempCByIndex(0);
-  float peltierTemp_1 = sensors.getTempCByIndex(1);
+  float peltierTemp_0 = peltierSensors.getTempCByIndex(0);
+  float peltierTemp_1 = peltierSensors.getTempCByIndex(1);
 
   snprintf(peltierTempPayload, sizeof(peltierTempPayload), "%.2f;%.2f;\n",
     peltierTemp_0,
