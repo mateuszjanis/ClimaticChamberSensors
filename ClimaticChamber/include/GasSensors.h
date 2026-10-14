@@ -7,7 +7,7 @@
 
 #include <mutex>
 
-#define PREHEATING (10 * 60 * 1000)  // (10 * 60 * 1000)  konwersja minut na milisekundy
+#define PREHEATING (1 * 60 * 1000)  // (10 * 60 * 1000)  konwersja minut na milisekundy
 #define SAMPLES 60 
 
 //-------------ADC ch

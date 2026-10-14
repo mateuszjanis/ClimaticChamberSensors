@@ -36,6 +36,7 @@ void handlePeltierTemp(){
 
 void printPeltierTemp(){
   
+  Serial.print("Peltier: ");
   Serial.println(peltierTempPayload);
 
 }

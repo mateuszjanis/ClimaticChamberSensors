@@ -84,12 +84,12 @@ bool I2C_init()
 }
 
 void readSensorI2C(uint16_t channel, float *voltage){
-  float voltage_temp = ads.computeVolts(channel);
-  if (voltage_temp > 0.1 && voltage_temp > 4.9){
+  float voltage_temp = ads.computeVolts(ads.readADC_SingleEnded(channel));
+  if (voltage_temp > 0.01 && voltage_temp < 4.99){
     *voltage += voltage_temp;
   }
   else{
-    Serial.println("⚠️ Zly odczyt ADC");
+    Serial.printf("⚠️ Zly odczyt ADC: %.3f\n", voltage_temp);
   }
 }
 

@@ -4,7 +4,6 @@
 // #include <esp_task_wdt.h>
 #include "Sensors.h"
 #include "GasSensors.h"
-#include <thread>
 #include <mutex>
 
 // #define WDT_TIMEOUT_SECONDS 10
@@ -54,13 +53,23 @@ void setup() {
   // get configuration from conf file (RPI) - .txt ?????? or .json
 
   peltierSensors.begin();
-  std::thread gasSensorsThread(runGasSensors);
+
+  // std::thread gasSensorsThread(runGasSensors);
+  xTaskCreate(
+  [](void* param){ runGasSensors(); }, 
+  "GasTask", 
+  8192,       
+  NULL,        
+  0,           
+  NULL         
+);
 
   Serial.println("\nESP START");
   delay(50);
+}
 
-  while (true)
-  {
+void loop() {
+
     // esp_task_wdt_reset();
 
     handlePeltierTemp();
@@ -69,10 +78,7 @@ void setup() {
     handleFTP();
     delay(peltierTemp_read_interval);
 
-  }
 }
-
-void loop() {}   // <- EMPTY
 
 void initializeWIFI(){
   WiFi.begin( WIFI_SSID, WIFI_PASS );
