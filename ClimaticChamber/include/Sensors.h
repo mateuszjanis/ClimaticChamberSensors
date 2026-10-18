@@ -13,7 +13,7 @@ extern const int oneWireBus;
 ////////////////////////////////////////////////////
 
 extern OneWire oneWire;
-extern DallasTemperature sensors;
+extern DallasTemperature peltierSensors;
 
 ////////////////////////////////////////////////////
 //----------------- GLOBAL VARIABLES -------------//
@@ -21,6 +21,8 @@ extern DallasTemperature sensors;
 
 extern float peltierTemp_0;
 extern float peltierTemp_1;
+
+extern char peltierTempPayload[128];
 
 ////////////////////////////////////////////////////
 //------------------ FUNCTIONS -------------------//
