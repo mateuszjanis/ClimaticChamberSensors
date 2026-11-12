@@ -2,42 +2,32 @@
 #include <WiFiClient.h> 
 #include <ESP32_FTPClient.h>
 // #include <esp_task_wdt.h>
-#include "Sensors.h"
 #include "GasSensors.h"
-#include <mutex>
 
 // #define WDT_TIMEOUT_SECONDS 10
 
-#define WIFI_SSID "hotspot"
+#define WIFI_SSID "hotspot_chamber"
 #define WIFI_PASS ""
 
 char ftp_server[] = "192.168.225.57"; //"192.168.225.31";
 char ftp_user[]   = "esp";  // "pi"; // 
 char ftp_pass[]   = "esp485"; // "raspberry"; //   
 
-char peltierTemp_file_name[] = "PeltierTemperature.csv";
 char gasSensors_file_name[] = "GasSensors.csv";
+char gasSensorsPayload[256]; // local
 
-char peltierTempPayload[128];
-char gasSensorsPayload[256];
-
-const unsigned int peltierTemp_read_interval = 10 * 1000; // 10 seconds
-const unsigned int gasSensors_read_interval = 10 * 60 * 1000; // 10 minutes
+const unsigned int gasSensors_read_interval = 1 * 60 * 1000; // 1 minute // from config
 
 const unsigned int connection_try_treshold = 20;
-unsigned int connection_try_counter = 0;
 
-// you can pass a FTP timeout and debbug mode on the last 2 arguments
+// FTP timeout and debbug mode on the last 2 arguments
 ESP32_FTPClient ftp (ftp_server,ftp_user,ftp_pass, 5000, 2);
-
-std::mutex gasSensorsMutex;
 
 //////////////////// FUNCTIONS /////////////////////
 
-void initializeWIFI();
-void initializeDataTransfer();
-void handleFTP();
-void writeToFTP(char* fileName, const char* payload);
+void connectWIFI(); // loop inside trying to connect
+void writeToFTP(const char* payload);
+// void getConfig(unsigned int connection_try_treshold, char gasSensors_file_name[], unsigned int gasSensors_read_interval);
 
 /////////////////// ACTUAL CODE ////////////////////
 
@@ -47,22 +37,13 @@ void setup() {
   // esp_task_wdt_add(NULL);
 
   Serial.begin(115200);
-  initializeWIFI();
-  initializeDataTransfer();
-
-  // get configuration from conf file (RPI) - .txt ?????? or .json
-
-  peltierSensors.begin();
-
-  // std::thread gasSensorsThread(runGasSensors);
-  xTaskCreate(
-  [](void* param){ runGasSensors(); }, 
-  "GasTask", 
-  8192,       
-  NULL,        
-  0,           
-  NULL         
-);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin( WIFI_SSID, WIFI_PASS );
+  WiFi.disconnect();
+  
+  connectWIFI();
+  // get config
+  // gasSensors_init();
 
   Serial.println("\nESP START");
   delay(50);
@@ -70,17 +51,22 @@ void setup() {
 
 void loop() {
 
-    // esp_task_wdt_reset();
+  // esp_task_wdt_reset();
 
-    handlePeltierTemp();
-    printPeltierTemp();
-    Serial.println("----------------------------------\n");
-    handleFTP();
-    delay(peltierTemp_read_interval);
+  char payload[256];
+  runMeasurementCycle( payload );
+
+  Serial.println("----------------------------------\n");
+  connectWIFI();
+  writeToFTP(payload);
+  WiFi.disconnect();
+  delay(gasSensors_read_interval);
 
 }
 
-void initializeWIFI(){
+void connectWIFI(){
+
+  unsigned int connection_try_counter = 0;
   WiFi.begin( WIFI_SSID, WIFI_PASS );
 
   Serial.println("Connecting Wifi...");
@@ -93,100 +79,42 @@ void initializeWIFI(){
 
   }
 
-  connection_try_counter = 0;
-
   Serial.println("");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
 }
 
-void initializeDataTransfer(){
+// in main loop new payload created after every cycle 
+void writeToFTP(const char* payload){
+  
+  unsigned int connection_try_counter = 0;
+  bool send_status = false;
 
   ftp.OpenConnection();
+  delay(100);
   ftp.ChangeWorkDir("Data");
 
-  /* ---------- is appending to file needed? 
-                or creating new file is better?
+  while(!send_status) {
 
-  String fileList[128];
-  ftp.InitFile("Type A");
-  ftp.ContentListWithListCommand(" /Data", fileList);
+    if (ftp.isConnected()){
 
-  bool gasFileExists = false;
-  bool peltierTempFileExists = false;
-
-  for (int i = 0; i < sizeof(fileList); i++) {
-    if(fileList[i].length() > 0){
-      fileList[i].trim();
-      
-      String gasSensors_fn_to_compare(gasSensors_file_name);
-      String peltierTemp_fn_to_compare(peltierTemp_file_name);
-
-      if (fileList[i] == gasSensors_fn_to_compare) {
-      gasFileExists = true;
-      Serial.printf("File %s already exists. Appending data to it.\n", gasSensors_fn_to_compare);
-      break;
-      }
-
-      if (fileList[i] == peltierTemp_fn_to_compare) {
-      peltierTempFileExists = true;
-      Serial.printf("File %s already exists. Appending data to it.\n", peltierTemp_fn_to_compare);
-      break;
-      }
-      
-    } else break;
-  }
-
-  if(!gasFileExists){
-    ftp.InitFile("Type A");
-    ftp.NewFile(gasSensors_file_name);
-    ftp.Write("MG811_OKY_CO2_f; MQ3_EtOH_f; MQ4_CH4_f; SEN0565_CH4_f; SEN0568_H2S_f; SEN0569_EtOH_f; SEN0567_NH3_f; SEN0467_H2S_f; SEN0469_NH3_f; SCD41_CO2_f; SCD41_T_f; SCD41_H_f\n");
-    ftp.CloseFile();
-    // Serial.printf("File %s created. Writing header.\n", gasSensors_file_name);
-  }
-
-  if(!peltierTempFileExists){
-    ftp.InitFile("Type A");
-    ftp.NewFile(peltierTemp_file_name);
-    ftp.Write("PeltIn; PeltOut\n");
-    ftp.CloseFile();
-    // Serial.printf("File %s created. Writing header.\n", peltierTemp_file_name);
-  }
-  */
-}
-
-void handleFTP(){
-    
-  if (ftp.isConnected()){
-
-    writeToFTP(peltierTemp_file_name, peltierTempPayload);
-
-    if (gasSensorsReady) {
-        std::unique_lock<std::mutex> gasLock(gasSensorsMutex);
-        char temp_payload[256];
-        strncpy(temp_payload, gasSensorsPayload, sizeof(temp_payload));
-        gasLock.unlock();
-
-        writeToFTP(gasSensors_file_name, temp_payload);
-
-        gasSensorsReady = false;
-    }
-
-  }
-  else {
-
-      initializeDataTransfer();
-      connection_try_counter++;
-      
-  }
-
-  if (connection_try_counter >= connection_try_treshold) esp_restart();
-}
-
-void writeToFTP(char* fileName, const char* payload){
       ftp.InitFile("Type A");
       // ftp.AppendFile(fileName);
-      ftp.NewFile(fileName);
+      ftp.NewFile(gasSensors_file_name);
       ftp.Write(payload);
       ftp.CloseFile();
+      send_status = true;
+
+    } else {
+
+      connection_try_counter++;
+      delay(1000);
+            
+    }
+
+    if (connection_try_counter >= connection_try_treshold) esp_restart();
+  
+  }
+
 }
