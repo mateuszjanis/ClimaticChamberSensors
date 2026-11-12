@@ -13,8 +13,7 @@ char ftp_server[] = "192.168.225.57"; //"192.168.225.31";
 char ftp_user[]   = "esp";  // "pi"; // 
 char ftp_pass[]   = "esp485"; // "raspberry"; //   
 
-char gasSensors_file_name[] = "GasSensors.csv";
-char gasSensorsPayload[256]; // local
+char gasSensors_file_name[] = "GasRecords.csv";
 
 const unsigned int gasSensors_read_interval = 1 * 60 * 1000; // 1 minute // from config
 
