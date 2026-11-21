@@ -5,9 +5,6 @@ uint16_t ERROR_SYSTEM = 0x0000;
 //SCD41_CO2_I2C
 SCD4x scd4x;
 
-//External ADC
-Adafruit_ADS1115 ads;
-
 void ADC_init() {
   analogReadResolution(12);  // 12-bit = 0–4095
 
@@ -28,13 +25,13 @@ void ADC_init() {
 }
 
 void readSensor(uint8_t pin, bool useRdiv_old, bool useRdiv_new, float *voltage) {
-  // int raw = analogRead(pin);
-  int raw = random(0, 4095); // Simulacja odczytu ADC dla testów
+  int raw = analogRead(pin);
+  // int raw = random(0, 4095); // Simulacja odczytu ADC dla testów
   float v = raw * ADC_SCALE;
 
-  if (useRdiv_old) {
+  if (useRdiv_old) {              // Korekta napięcia z dzielnika
   
-    v = v / R_DIV_RATIO_OLD;  // Korekta napięcia z dzielnika
+    v = v / R_DIV_RATIO_OLD;
   
   } else if (useRdiv_new) {
 
@@ -84,35 +81,36 @@ bool I2C_init()
 
 void readSensorSCD41_CO2 (float *CO2, float *T, float *H) {
   if (scd4x.readMeasurement()) {
-    // *CO2 += scd4x.getCO2();
-    // *T += scd4x.getTemperature();
-    // *H += scd4x.getHumidity();
+    *CO2 += scd4x.getCO2();
+    *T += scd4x.getTemperature();
+    *H += scd4x.getHumidity();
 
-    *CO2 += random(10);
-    *T += random(10);
-    *H += random(10);
     } 
   else {
     Serial.println("⚠️ Brak danych z SCD41");
   }
+
+  // *CO2 += random(10);
+  // *T += random(10);
+  // *H += random(10);
 }
 
 void gasSensors_init()
 {
-    // Preheating
-    Serial.println("Preheating start\n");
-    delay(PREHEATING); 
-    Serial.println("Preheating stop\n");
+  ADC_init();
+  delay(5);
 
-    ADC_init();
-    delay(5);
+  if(I2C_init()==false)
+  ERROR_SYSTEM =  ERROR_SYSTEM | 0x0040; 
+  delay(5); 
 
-    if(I2C_init()==false)
-    ERROR_SYSTEM =  ERROR_SYSTEM | 0x0040; 
-    delay(5); 
+      // Preheating
+  Serial.println("Preheating start\n");
+  delay(PREHEATING); 
+  Serial.println("Preheating stop\n");
 }
 
-void runMeasurementCycle(char* gasPayload){
+void runMeasurementCycle(char* gasPayload, size_t payloadSize){
 
   float MG811_OKY_CO2_f   = 0.0f;
   float MQ3_EtOH_f        = 0.0f;
@@ -131,17 +129,17 @@ void runMeasurementCycle(char* gasPayload){
   float SCD41_H_f  = 0.0f;
 
 
-    /*
-    * Parametr Wartość
-    Preheating  5 minut
-    Częstotliwość odczytu co 2 sekundy
-    Liczba próbek 30 próbek (1 minuta)
-    Uśrednienie średnia arytmetyczna
-    */
+  /*
+  * Parametr Wartość
+  Preheating  5 minut
+  Częstotliwość odczytu co 2 sekundy
+  Liczba próbek 30 próbek (1 minuta)
+  Uśrednienie średnia arytmetyczna
+  */
 
-    Serial.println("🔍 Rozpoczęcie pomiarów...");
+  Serial.println("🔍 Rozpoczęcie pomiarów...");
 
-    // 5 minut =60 próbek co 5s - tyle potrzebuje SCD41_CO2_f
+  // 5 minut = 60 próbek co 5s - tyle potrzebuje SCD41_CO2_f
 
   for (int i = 0; i < SAMPLES; i++) {  
 
@@ -160,7 +158,7 @@ void runMeasurementCycle(char* gasPayload){
 
     readSensorSCD41_CO2(&SCD41_CO2_f, &SCD41_T_f, &SCD41_H_f);
 
-    delay(5000); 
+    delay(5000);
   }
 
   MQ3_EtOH_f /= SAMPLES;
@@ -177,8 +175,7 @@ void runMeasurementCycle(char* gasPayload){
   SCD41_T_f /= SAMPLES; 
   SCD41_H_f /= SAMPLES;
 
-  // Update the gas sensors payload with the latest readings
-  snprintf(gasPayload, sizeof(gasPayload), 
+  snprintf(gasPayload, payloadSize, 
       "%.3f;%.3f;%.3f;%.3f;%.3f;%.3f;%.3f;%.3f;%.3f;%.3f;%.3f;%.3f;\r\n",
       MG811_OKY_CO2_f,    // %.5f
       MQ3_EtOH_f,         // %.5f
@@ -195,9 +192,8 @@ void runMeasurementCycle(char* gasPayload){
   );
 
   Serial.println("🔍 Pomiary zakończone. Wyniki:");
-  Serial.println(gasPayload);
+  // Serial.println(gasPayload);
 
-  /*
     Serial.printf(
     "MQ3_EtOH: %.3f V, MQ4_CH4: %.3f V, MG811_CO2: %.3f V, \n"
     "SEN0565_CH4: %.3f V, SEN0568_H2S: %.3f V, SEN0569_EtOH: %.3f V, \n"
@@ -208,7 +204,7 @@ void runMeasurementCycle(char* gasPayload){
     SEN0565_CH4_f, SEN0568_H2S_f, SEN0569_EtOH_f,
     SEN0567_NH3_f, SEN0467_H2S_f,SEN0469_NH3_f,
     SCD41_CO2_f, SCD41_T_f, SCD41_H_f 
-  );
-  */
+    );
+
 
 }

@@ -39,9 +39,6 @@
 
 extern uint16_t ERROR_SYSTEM;
 
-extern const unsigned int gasSensors_read_interval;
-extern char gasSensorsPayload[256];
-
 //-------------- FUNCTIONS ----------------
 
 void ADC_init();
@@ -49,5 +46,4 @@ void readSensor (uint8_t pin, bool useRdiv_old, bool useRdiv_new, float *voltage
 bool I2C_init();
 void readSensorSCD41_CO2 (float *CO2, float *T, float *H);
 void gasSensors_init();
-void runMeasurementCycle(char* gasPayload);
-void runGasSensors();
+void runMeasurementCycle(char* gasPayload, size_t payloadSize);
