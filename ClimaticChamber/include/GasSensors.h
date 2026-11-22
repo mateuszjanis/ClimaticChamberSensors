@@ -2,7 +2,6 @@
 
 //dla CO2 I2C 
 #include <Wire.h>
-#include <Adafruit_ADS1X15.h>
 #include "SparkFun_SCD4x_Arduino_Library.h" // <-- get from github https://github.com/sparkfun/SparkFun_SCD4x_Arduino_Library/tree/main/src
 
 #define PREHEATING (5 * 60 * 1000)  // (10 * 60 * 1000)  konwersja minut na milisekundy // from config

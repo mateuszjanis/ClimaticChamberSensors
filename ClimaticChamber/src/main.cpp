@@ -47,6 +47,7 @@ void setup() {
   esp_wifi_stop();        // Zatrzymuje stos WiFi
 
   last_sensor_read = esp_timer_get_time();
+  Serial.println("Gas sensors read interval: " + String(gasSensors_read_interval / 1000 / 60) + " minutes");
 
   gasSensors_init();
 
@@ -146,7 +147,7 @@ unsigned int readIntervalFromConfig(){
 
   ftp.OpenConnection();
   delay(100);
-  ftp.ChangeWorkDir("/home/esp");
+  // ftp.ChangeWorkDir("/home/esp");
 
   while(!read_status) {
 
@@ -170,6 +171,6 @@ unsigned int readIntervalFromConfig(){
   
   }
 
-  return interval;
+  return interval * 60 * 1000; // convert to milliseconds
 
 }
