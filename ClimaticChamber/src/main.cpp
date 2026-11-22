@@ -42,12 +42,13 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin( WIFI_SSID, WIFI_PASS );
   delay(1000);
-  gasSensors_read_interval = readIntervalFromConfig() * 60 * 1000; // updated from config
+  gasSensors_read_interval = readIntervalFromConfig() * 60 * 1000 * 1000; // [microseconds] updated from config
+  Serial.println("Gas sensors read interval: " + String(gasSensors_read_interval / 1000 / 1000 / 60) + " minutes");
+  
   WiFi.disconnect(true);  // Odłącza i wyłącza WiFi (true = całkowite wyłączenie) - ADC2 włączony
   esp_wifi_stop();        // Zatrzymuje stos WiFi
 
   last_sensor_read = esp_timer_get_time();
-  Serial.println("Gas sensors read interval: " + String(gasSensors_read_interval / 1000 / 60) + " minutes");
 
   gasSensors_init();
 
@@ -171,6 +172,6 @@ unsigned int readIntervalFromConfig(){
   
   }
 
-  return interval * 60 * 1000; // convert to milliseconds
+  return interval; // convert to milliseconds
 
 }
