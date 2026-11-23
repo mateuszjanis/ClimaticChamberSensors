@@ -103,14 +103,16 @@ void gasSensors_init()
   if(I2C_init()==false)
   ERROR_SYSTEM =  ERROR_SYSTEM | 0x0040; 
   delay(5); 
-
-      // Preheating
-  Serial.println("Preheating start\n");
-  delay(PREHEATING); 
-  Serial.println("Preheating stop\n");
 }
 
 void runMeasurementCycle(char* gasPayload, size_t payloadSize){
+
+  // Preheating
+  Serial.println("Preheating start\n");
+  delay(PREHEATING); 
+  Serial.println("Preheating stop\n");
+
+  gasSensors_init();
 
   float MG811_OKY_CO2_f   = 0.0f;
   float MQ3_EtOH_f        = 0.0f;

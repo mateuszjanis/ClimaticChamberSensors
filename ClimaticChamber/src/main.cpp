@@ -10,6 +10,8 @@
 #define WIFI_SSID "hotspot_chamber"
 #define WIFI_PASS ""
 
+#define GAS_RELAY 14 // ????
+
 char ftp_server[] = "192.168.225.57"; //"192.168.225.31";
 char ftp_user[]   = "esp";  // "pi"; // 
 char ftp_pass[]   = "esp485"; // "raspberry"; //   
@@ -39,18 +41,27 @@ void setup() {
   // esp_task_wdt_add(NULL);
 
   Serial.begin(115200);
+  pinMode(GAS_RELAY, OUTPUT);
+
+  // INITIAL MEASUREMENT
+    last_sensor_read = esp_timer_get_time();
+    digitalWrite(GAS_RELAY, LOW);
+    Serial.println("Initial measurement.");
+    char payload[256];
+    runMeasurementCycle( payload, sizeof(payload) );
+
+    digitalWrite(GAS_RELAY, HIGH);
+  // ------------------------------
+  
   WiFi.mode(WIFI_STA);
   WiFi.begin( WIFI_SSID, WIFI_PASS );
   delay(1000);
   gasSensors_read_interval = readIntervalFromConfig() * 60 * 1000 * 1000; // [microseconds] updated from config
   Serial.println("Gas sensors read interval: " + String(gasSensors_read_interval / 1000 / 1000 / 60) + " minutes");
-  
+  writeToFTP(payload);
+  delay(100);
   WiFi.disconnect(true);  // Odłącza i wyłącza WiFi (true = całkowite wyłączenie) - ADC2 włączony
   esp_wifi_stop();        // Zatrzymuje stos WiFi
-
-  last_sensor_read = esp_timer_get_time();
-
-  gasSensors_init();
 
   Serial.println("\nESP START");
   delay(50);
@@ -63,10 +74,12 @@ void loop() {
   if (esp_timer_get_time() - last_sensor_read >= gasSensors_read_interval) {
     
     last_sensor_read = esp_timer_get_time();
-    Serial.println("🔄 Starting new measurement cycle... after " + String(esp_timer_get_time() - last_sensor_read / 1000));
+    digitalWrite(GAS_RELAY, LOW);
 
     char payload[256];
     runMeasurementCycle( payload, sizeof(payload) );
+
+    digitalWrite(GAS_RELAY, HIGH);
 
     Serial.println("----------------------------------\n");
     connectWIFI();
