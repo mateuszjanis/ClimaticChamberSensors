@@ -10,7 +10,7 @@
 #define WIFI_SSID "hotspot_chamber"
 #define WIFI_PASS ""
 
-#define GAS_RELAY 14 // ????
+#define GAS_RELAY 19
 
 char ftp_server[] = "192.168.225.57"; //"192.168.225.31";
 char ftp_user[]   = "esp";  // "pi"; // 
@@ -46,6 +46,7 @@ void setup() {
   // INITIAL MEASUREMENT
     last_sensor_read = esp_timer_get_time();
     digitalWrite(GAS_RELAY, LOW);
+    
     Serial.println("Initial measurement.");
     char payload[256];
     runMeasurementCycle( payload, sizeof(payload) );
